@@ -11,7 +11,7 @@ parameters in a method call.
 
 # Usage
 
-* There are two ways of use:
+* There are three ways of use:
 
   * Include validation rules inside the object:
 
@@ -79,6 +79,20 @@ parameters in a method call.
         obj.method1({:level => "1"})  # This will raise an ArgumentError exception because :level parameter type is invalid 
         obj.method1({:level => 1})  # This will execute successfully the method call
         obj.method2({:level => 1})  # This will raise an ArgumentError exception because :data parameter is missing
+
+
+  * Client side validation (kudos to @drslump)
+
+        obj = ParamsValidator::Request.new
+        obj[:data] = "this is a log"
+        obj[:level] = 1
+        ruleset = MockObject.get_rule(:method2)
+        obj.valid?(ruleset) # false
+        begin
+          obj.validate(ruleset)
+        rescue ArgumentError => ae
+          p ae.message  # array with validation errors
+        end
 
 
   More examples can be found in test folder.
