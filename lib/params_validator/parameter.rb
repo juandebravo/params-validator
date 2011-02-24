@@ -1,3 +1,7 @@
+#
+# Juan de Bravo <juandebravo@gmail.com>
+#
+
 module ParamsValidator
 
   #

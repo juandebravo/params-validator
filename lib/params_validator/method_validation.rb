@@ -1,5 +1,8 @@
 require 'params_validator/parameter'
 
+#
+# Juan de Bravo <juandebravo@gmail.com>
+#
 module ParamsValidator
 
   #

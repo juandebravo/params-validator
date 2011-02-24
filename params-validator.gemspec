@@ -1,16 +1,17 @@
 # -*- encoding: utf-8 -*-
-$:.push File.expand_path("../lib", __FILE__)
-require "params-validator/version"
+$:.push File.expand_path("lib", ".")
+
+require "params_validator/version"
 
 Gem::Specification.new do |s|
   s.name        = "params-validator"
-  s.version     = Params::Validator::VERSION
+  s.version     = ParamsValidator::VERSION
   s.platform    = Gem::Platform::RUBY
-  s.authors     = ["TODO: Write your name"]
-  s.email       = ["TODO: Write your email address"]
+  s.authors     = ["Juan de Bravo"]
+  s.email       = ["juandebravo@gmail.com"]
   s.homepage    = ""
-  s.summary     = %q{TODO: Write a gem summary}
-  s.description = %q{TODO: Write a gem description}
+  s.summary     = "params-validators allows to validate the required/optional parameters in a method"
+  s.description = "params-validators allows to validate the required/optional parameters in a method"
 
   s.rubyforge_project = "params-validator"
 
@@ -18,4 +19,5 @@ Gem::Specification.new do |s|
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
+  
 end
