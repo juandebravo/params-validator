@@ -24,7 +24,11 @@ EOF
 
 
   user = Project::Provisioning::UserObject.new
-  user.create({:name => "juannnnn", :password => "project", :birthday => 1978})
+  begin
+    user.create({:name => "juan", :password1 => "project", :birthday => 1978})
+  rescue ArgumentError => ex
+    p ex.message
+  end
   user.delete({:user_id => "juan"})
 
   application = Project::Provisioning::Application.new

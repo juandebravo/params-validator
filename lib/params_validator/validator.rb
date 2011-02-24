@@ -16,6 +16,8 @@ module ParamsValidator
     ERROR_MESSAGE_TYPE  = "Parameter %s present but invalid type %s"
     ERROR_MESSAGE_BLOCK = "Parameter %s present but does not match the ruleset"
 
+    attr_reader :methods_loaded
+
     def initialize
       @methods_loaded = {}
     end
@@ -32,8 +34,7 @@ module ParamsValidator
     end
 
     #
-    # This method is part of the DSL and defines a new
-    # validator rule
+    # This method is part of the DSL and defines a new validator rule
     # @param method_name fully qualified method name (Module::Class::method)
     # @param block the block to be executed
     #
@@ -49,54 +50,83 @@ module ParamsValidator
     # @param params
     #
     def validate_params(method_name, params)
+      errors = []
 
       # fetch method rulesets
       method = @methods_loaded[method_name.to_sym]
 
       if method.nil?
         # TODO enable devel or prod mode to raise or not an exception
-        raise ArgumentError, "Unable to validate method #{method_name} with (#{@methods_loaded.keys.length}) keys #{@methods_loaded.keys}"
+        errors.push "Unable to validate method #{method_name} with (#{@methods_loaded.keys.length}) keys #{@methods_loaded.keys}"
+        raise ArgumentError, errors
       end
 
       # fetch all params (optional and mandatory)
-      check_params    = method.parameters
+      check_params = method.parameters
 
-      if !check_params.nil? and params.nil?
-        raise ArgumentError, "Nil parameters when #{check_params.length} expected"
+      self.class.validate_ruleset(check_params, params)
+
+    end
+
+    #
+    # This method validates a params hash against a specific rulset
+    # @param valid_params ruleset
+    # @param params
+    #
+    def Validator.validate_ruleset(valid_params, params)
+      errors = []
+      if !valid_params.nil? and params.nil?
+        errors.push "Nil parameters when #{valid_params.length} expected"
+        raise ArgumentError, errors
       end
 
       # if just one param -> include as array with length 1
-      if check_params.instance_of?(Array) && check_params.length == 1 && params.instance_of?(String)
-        params = {check_params[0].name.to_sym => params}
+      if valid_params.instance_of?(Array) && valid_params.length == 1 && params.instance_of?(String)
+        params = {valid_params[0].name.to_sym => params}
       end
 
       # Validate the params
-      check_params.each{|key|
+      valid_params.each{|key|
         # get param
         param = params[key.name.to_sym]
-
-        if key.optional? and param.nil? # argument optional and not present -> continue
-          next
-        end
-
-        if param.nil? # argument mandatory and not present
-          raise ArgumentError, ERROR_MESSAGE_NULL % key.name
-        else
-          # check argument type is valid
-          unless param.is_a?(key.klass)
-            raise ArgumentError, ERROR_MESSAGE_TYPE % [key.name, param.class]
-          end
-
-          # check argument satisfies ruleset (if present)
-          unless key.rule.nil?
-            !key.rule.call(param) and raise ArgumentError, ERROR_MESSAGE_BLOCK % key.name
-          end
+        check_result = Validator.check_param(key, param)
+        unless check_result.nil?
+          errors.push check_result
         end
       }
+      unless errors.empty?
+        raise ArgumentError, errors
+      end
       # no exception -> successfully validated
       true
 
-    end 
+    end
+
+    #
+    # This method validates if the specific method is valid
+    # @param valid_param object containing the param ruleset
+    # @param param param specified by the user in the method call
+    #
+    def Validator.check_param(valid_param, param)
+      if valid_param.optional? and param.nil? # argument optional and not present -> continue
+        return nil
+      end
+
+      if param.nil? # argument mandatory and not present
+        return ERROR_MESSAGE_NULL % valid_param.name
+      else
+        # check argument type is valid
+        unless param.is_a?(valid_param.klass)
+          return ERROR_MESSAGE_TYPE % [valid_param.name, param.class]
+        end
+
+        # check argument satisfies ruleset (if present)
+        unless valid_param.rule.nil?
+          !valid_param.rule.call(param) and return ERROR_MESSAGE_BLOCK % valid_param.name
+        end
+      end
+      nil
+    end
 
   end
 end

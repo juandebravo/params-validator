@@ -1,9 +1,10 @@
 $:.unshift File.join(File.dirname(__FILE__),'.')
 
 require 'params-validator'
-require 'mock_object'
+require 'mock/mock_object'
 require 'yamock_object'
 
+include Mock
 
 describe ParamsValidator::ValidParams do
   describe "validate_method inside class" do
@@ -59,24 +60,23 @@ describe ParamsValidator::ValidParams do
   end
 
   describe "validate_method inline" do
-    prefix=File.dirname(__FILE__).split("/")[1..-1].push(".").map!{|x| x.capitalize}.join("::")+"::"
     rules = <<EOF
-      validation_rule("#{prefix}YamockObject::log") do
+      validation_rule("YamockObject::log") do
       end
-      validation_rule("#{prefix}YamockObject::log_level") do
+      validation_rule("YamockObject::log_level") do
         level
       end 
-      validation_rule("#{prefix}YamockObject::log_level_type") do
+      validation_rule("YamockObject::log_level_type") do
         level Fixnum
       end 
-      validation_rule("#{prefix}YamockObject::log_level_type_optional") do
+      validation_rule("YamockObject::log_level_type_optional") do
         level(Fixnum, :optional)
       end 
-      validation_rule("#{prefix}YamockObject::log_data") do
+      validation_rule("YamockObject::log_data") do
         data(String)
         level(Fixnum, :optional)
       end 
-      validation_rule("#{prefix}YamockObject::log_data_block") do
+      validation_rule("YamockObject::log_data_block") do
         data(String) { |data| !data.nil? and data.length > 0}
         level(Fixnum, :optional) {|level| level <= 3}
       end 

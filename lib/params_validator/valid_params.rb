@@ -52,15 +52,7 @@ module ParamsValidator
       #      validate_method [:method1, :method2]
       def validate_method(method, &block)
         # get the fully qualified method name
-        interface = caller[0][/^(.*)(\.rb).*$/, 1].split('/').last
-        interface = caller[0][/^(.*)(\.rb).*$/, 1].split('/')
-        interface.shift
-        interface = interface.map!{|x| 
-          unless x.index("_").nil?
-            x = x.gsub(/_[a-zA-Z]/) {|s| s[1..-1].upcase}
-          end
-          x=x[0..0].upcase+x[1..-1]
-        }.join("::")
+        interface = self.name
 
         # cast to array if method is one symbol
         method.instance_of?(Symbol) and method = [method]
@@ -85,6 +77,17 @@ module ParamsValidator
             send(old_method, *args, &block)
           end
         }
+      end
+
+      # get the specified rule for a method
+      def get_rule(method)
+        object_name = self.name
+        key = "#{object_name}::#{method}"
+        method_validation = validator.methods_loaded[key.to_sym]
+        unless method_validation.nil?
+          return method_validation.parameters
+        end
+        nil
       end
 
       # validator object

@@ -1,4 +1,5 @@
 require 'params_validator/validator'
+require 'params_validator/request'
 
 #
 # Juan de Bravo <juandebravo@gmail.com>
