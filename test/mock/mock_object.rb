@@ -4,13 +4,13 @@ module Mock
   class MockObject
     include ParamsValidator::ValidParams
 
-    [:log, :log_level, :log_level_type, :log_level_type_optional, :log_data, :log_data_block].each{|m|
+    [:log, :log_level, :log_level_type, :log_level_type_optional, :log_data, :log_data_block, :inherit_method].each{|m|
       define_method(m) do |*args, &block|
         #puts "call to method #{m.to_s}"
         true
       end
     }
-
+    
     validate_method(:log) do
     end
     validate_method(:log_level) do
@@ -29,6 +29,10 @@ module Mock
     validate_method(:log_data_block) do
       data(String) { |data| !data.nil? and data.length > 0}
       level(Fixnum, :optional) {|level| level <= 3}
+    end
+    
+    validate_method(:inherit_method) do
+      level(Fixnum, :optional)
     end
   end
 end  

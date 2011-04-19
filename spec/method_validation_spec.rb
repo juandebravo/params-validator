@@ -21,7 +21,8 @@ describe ParamsValidator::MethodValidation  do
     }
 
     it "params length should be 4" do
-      method = ParamsValidator::MethodValidation.new("Module::Class:method", &proc)
+      method = ParamsValidator::MethodValidation.new("Module::Class:method")
+      method.block &proc
       method.parameters.length.should == 4
     end
 

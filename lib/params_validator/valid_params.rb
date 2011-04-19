@@ -41,6 +41,21 @@ module ParamsValidator
 
     def load_rules(rules)
       self.class.load_rules(rules)
+    end    
+    
+    # This method is used for implicit validations (ruleset specification inside a method)
+    #
+    # @param params method call parameters
+    # @param &block DSL that defines the validation ruleset
+    # return true if params fit the ruleset defined in &block
+    # raise ArgumentError if an error occurred
+    #
+    def validate_method(params = nil, &block)
+      method = MethodValidation.new("foo_bar")
+      
+      block_given? and method.block &block
+      
+      Validator.validate_ruleset(method.parameters, params)
     end
 
     # inner module to define class methods
@@ -50,16 +65,23 @@ module ParamsValidator
       # should be validated when called.
       # i.e. validate_method :method1
       #      validate_method [:method1, :method2]
-      def validate_method(method, &block)
+      def validate_method(method=nil, &block)
         # get the fully qualified method name
         interface = self.name
-
+        
         # cast to array if method is one symbol
         method.instance_of?(Symbol) and method = [method]
 
         # wrap each method
         method.each{|m|
           interface_method = [interface, m].join("::")
+          
+          if validator.has_method_rule?(interface_method)
+            # already has a validation => delete it
+            old_method = "#{m}_old"
+            self.send :alias_method, *[m, old_method]
+            remove_method("#{m}_old".to_sym)
+          end
 
           # add validation rule to the specific method if a block is defined
           if block_given?

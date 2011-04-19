@@ -7,11 +7,24 @@ parameters in a method call.
 
     gem install params-validator
 
-# Requirementes
+# Requirements
+
+# v0.2.0 changes
+
+- FEATURE: definition of validation rulesets inside the method, so it improves the code style including the validation as the first step in a method execution (suggested by [osuka](https://github.com/osuka))
+
+- FIXED: If a method has a ruleset that defines all the parameters as optional, a nil argument
+	is allowed. On previous versions an ArgumentError exception was thrown
+	
+- FIXED: inheritance allowed. A method can define a more restrictive ruleset in a inherited method.
+
+- FIXED: a method validation can be redefined, the first definition will not be used.
+	
+- MOVED: specs to folder ./spec
 
 # Usage
 
-* There are three ways of use:
+* There are four ways of use:
 
   * Include validation rules inside the object:
 
@@ -80,8 +93,20 @@ parameters in a method call.
         obj.method1({:level => 1})  # This will execute successfully the method call
         obj.method2({:level => 1})  # This will raise an ArgumentError exception because :data parameter is missing
 
+  * Implicit validation: ruleset defined inside the method, kudos to [osuka](https://github.com/osuka)
 
-  * Client side validation (kudos to @drslump)
+		require 'params-validator'
+		class MockObject
+		  include ParamsValidator::ValidParams
+		
+		  def method1(args)
+		  	validate_method(args) do
+		    	level(Fixnum, :optional)
+		  	end
+		  end
+		end
+
+  * Client side validation, kudos to [drslump](https://github.com/drslump)
 
         obj = ParamsValidator::Request.new
         obj[:data] = "this is a log"

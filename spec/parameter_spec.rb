@@ -4,6 +4,8 @@ require 'params-validator'
 
 describe ParamsValidator::Parameter  do
   describe "optional" do
+    
+    let("value"){puts "1"}
     #optional
     it "optional? returns true if parameter is optional" do
       param = ParamsValidator::Parameter.new("parameter", Object, true, nil)

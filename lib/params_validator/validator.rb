@@ -8,7 +8,8 @@ require 'params_validator/valid_params'
 module ParamsValidator
 
   #
-  # This class
+  # This class keeps the rulesets defined in the program and performs the validation between
+  # a specific ruleset and a set of parameters
   #
   class Validator
 
@@ -43,6 +44,11 @@ module ParamsValidator
       block_given? and method.block &block
       @methods_loaded[:"#{method_name}"] = method
     end
+    
+    def has_method_rule?(method_name)
+      !method_name.is_a?(Symbol) and method_name = method_name.to_sym
+      @methods_loaded.has_key?(method_name)
+    end
 
     #
     # This method validates if the specific call to method_name is valid
@@ -54,7 +60,7 @@ module ParamsValidator
 
       # fetch method rulesets
       method = @methods_loaded[method_name.to_sym]
-
+      
       if method.nil?
         # TODO enable devel or prod mode to raise or not an exception
         errors.push "Unable to validate method #{method_name} with (#{@methods_loaded.keys.length}) keys #{@methods_loaded.keys}"
@@ -68,64 +74,74 @@ module ParamsValidator
 
     end
 
-    #
-    # This method validates a params hash against a specific rulset
-    # @param valid_params ruleset
-    # @param params
-    #
-    def Validator.validate_ruleset(valid_params, params)
-      errors = []
-      if !valid_params.nil? and params.nil?
-        errors.push "Nil parameters when #{valid_params.length} expected"
-        raise ArgumentError, errors
-      end
-
-      # if just one param -> include as array with length 1
-      if valid_params.instance_of?(Array) && valid_params.length == 1 && params.instance_of?(String)
-        params = {valid_params[0].name.to_sym => params}
-      end
-
-      # Validate the params
-      valid_params.each{|key|
-        # get param
-        param = params[key.name.to_sym]
-        check_result = Validator.check_param(key, param)
-        unless check_result.nil?
-          errors.push check_result
-        end
-      }
-      unless errors.empty?
-        raise ArgumentError, errors
-      end
-      # no exception -> successfully validated
-      true
-
-    end
-
-    #
-    # This method validates if the specific method is valid
-    # @param valid_param object containing the param ruleset
-    # @param param param specified by the user in the method call
-    #
-    def Validator.check_param(valid_param, param)
-      if valid_param.optional? and param.nil? # argument optional and not present -> continue
-        return nil
-      end
-
-      if param.nil? # argument mandatory and not present
-        return ERROR_MESSAGE_NULL % valid_param.name
-      else
-        # check argument type is valid
-        unless param.is_a?(valid_param.klass)
-          return ERROR_MESSAGE_TYPE % [valid_param.name, param.class]
+    class << self
+      #
+      # This method validates a params hash against a specific ruleset
+      # @param valid_params ruleset
+      # @param params
+      #
+      def validate_ruleset(valid_params, params)
+        errors = []
+      
+        # if params.nil? but the ruleset defines all the parameters as optional
+        # this method should return true
+        if !valid_params.nil? and params.nil?
+          valid_params.each{|param|
+            !param.optional? and (
+              errors.push "Nil parameters when #{valid_params.length} expected"
+              raise ArgumentError, errors
+            )
+          }
+          return true
         end
 
-        # check argument satisfies ruleset (if present)
-        unless valid_param.rule.nil?
-          !valid_param.rule.call(param) and return ERROR_MESSAGE_BLOCK % valid_param.name
+        # if just one param -> include as array with length 1
+        if valid_params.instance_of?(Array) && valid_params.length == 1 && params.instance_of?(String)
+          params = {valid_params[0].name.to_sym => params}
         end
+
+        # Validate the params
+        valid_params.each{|key|
+          # get param
+          param = params[key.name.to_sym]
+          check_result = Validator.check_param(key, param)
+          unless check_result.nil?
+            errors.push check_result
+          end
+        }
+        unless errors.empty?
+          raise ArgumentError, errors
+        end
+        # no exception -> successfully validated
+        true
+
       end
-      nil
+
+      #
+      # This method validates if the specific method is valid
+      # @param valid_param object containing the param ruleset
+      # @param param param specified by the user in the method call
+      #
+      def check_param(valid_param, param)
+        if valid_param.optional? and param.nil? # argument optional and not present -> continue
+          return nil
+        end
+
+        if param.nil? # argument mandatory and not present
+          return ERROR_MESSAGE_NULL % valid_param.name
+        else
+          # check argument type is valid
+          unless param.is_a?(valid_param.klass)
+            return ERROR_MESSAGE_TYPE % [valid_param.name, param.class]
+          end
+
+          # check argument satisfies ruleset (if present)
+          unless valid_param.rule.nil?
+            !valid_param.rule.call(param) and return ERROR_MESSAGE_BLOCK % valid_param.name
+          end
+        end
+        nil
+      end
     end
 
   end

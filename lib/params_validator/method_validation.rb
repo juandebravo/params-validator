@@ -25,7 +25,7 @@ module ParamsValidator
     def initialize(method_name, &block)
       @method_name = method_name
       @parameters = []
-      block_given? and self.instance_eval &block
+      block_given? and self.instance_exec &block
     end
 
     # get mandatory parameters
@@ -41,7 +41,7 @@ module ParamsValidator
     # Execute validation block in this object scope
     #
     def block(&block)
-      block_given? and self.instance_eval &block
+      block_given? and self.instance_exec &block
     end
 
     #
@@ -62,6 +62,10 @@ module ParamsValidator
 
       parameter = Parameter.new(meth, args.length < 1 ? Object : args[0], optional, block)
       @parameters.push parameter
+    end
+    
+    def to_s
+      "method <#{self.method_name}> => #{parameters.to_s}"
     end
 
   end

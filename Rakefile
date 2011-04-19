@@ -10,5 +10,5 @@ task :default => :spec
 desc "Run all specs"
 
 RSpec::Core::RakeTask.new do |t|
-    t.pattern = './test/**/*_spec.rb'
+    t.pattern = './spec/**/*_spec.rb'
 end
