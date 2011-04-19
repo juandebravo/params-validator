@@ -28,29 +28,31 @@ parameters in a method call.
 
   * Include validation rules inside the object:
 
-        require 'params-validator'
-        class MockObject
-          include ParamsValidator::ValidParams
-          # define two useless methods 
-          [:method1, :method2].each{|m|
-            define_method(m) do |*args, &block|
-              puts {:foo => "bar"}
-              true
-            end
-          }
-          # method1 arguments ruleset
-          validate_method(:method1) do
-            level(Fixnum, :optional)
-          end
-          # method2 arguments ruleset
-          validate_method(:method2) do
-            data(String) { |data| !data.nil? and data.length > 0}
-            level(Fixnum, :optional) {|level| level <= 3}
-          end
-        end
+  See this example:
 
+		require 'params-validator'
+		class MockObject
+		  include ParamsValidator::ValidParams
+		  # define two useless methods 
+		  [:method1, :method2].each{|m|
+		    define_method(m) do |*args, &block|
+		      puts {:foo => "bar"}
+		      true
+		    end
+		  }
+		  # method1 arguments ruleset
+		  validate_method(:method1) do
+		    level(Fixnum, :optional)
+		  end
+		  # method2 arguments ruleset
+		  validate_method(:method2) do
+		    data(String) { |data| !data.nil? and data.length > 0}
+		    level(Fixnum, :optional) {|level| level <= 3}
+		  end
+		end
+		
 
-  When calling a specific method, an ArgumentError exception will be raised if at least one parameter is invalid
+   When calling a specific method, an ArgumentError exception will be raised if at least one parameter is invalid
 
         obj = MockObject.new
         obj.method1({:level => "1"})  # This will raise an ArgumentError exception because :level parameter type is invalid
@@ -93,7 +95,9 @@ parameters in a method call.
         obj.method1({:level => 1})  # This will execute successfully the method call
         obj.method2({:level => 1})  # This will raise an ArgumentError exception because :data parameter is missing
 
-  * Implicit validation: ruleset defined inside the method, kudos to [osuka](https://github.com/osuka)
+  * Implicit validation
+
+    Ruleset defined inside the method, kudos to [osuka](https://github.com/osuka)
 
 		require 'params-validator'
 		class MockObject
@@ -106,7 +110,9 @@ parameters in a method call.
 		  end
 		end
 
-  * Client side validation, kudos to [drslump](https://github.com/drslump)
+  * Client side validation
+
+    Request validation to ensure a method call is valid in advance, kudos to [drslump](https://github.com/drslump)
 
         obj = ParamsValidator::Request.new
         obj[:data] = "this is a log"
@@ -120,5 +126,5 @@ parameters in a method call.
         end
 
 
-  More examples can be found in test folder.
+  More examples can be found in test/spec folders.
 
